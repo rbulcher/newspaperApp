@@ -1,6 +1,5 @@
 const express = require('express');
 const morgan = require('morgan');
-const helmet = require('helmet');
 const cors = require('cors')
 const mongoose = require('mongoose')
 const port = process.env.PORT || 1337;
@@ -11,6 +10,7 @@ const middlewares = require('./middlewares');
 const logs = require('./api/logs');
 
 const app = express();
+const path = require('path')
 
 mongoose.connect(process.env.DATABASE_URL,{
     useNewUrlParser: true,
@@ -18,21 +18,21 @@ mongoose.connect(process.env.DATABASE_URL,{
 });
 
 app.use(morgan('common'));
-app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(express.static("express"));
 
-app.get('/', (req,res) => {
-    res.json( {
-        message: 'Hello World'
-    })
-})
 
 app.use('/api/logs', logs);
+
+app.use(express.static(path.join(__dirname, 'build')));
+
+app.get('*', function (req, res) {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
 
-app.listen(port, () => {
-    console.log('listening at http://localhost:${port}')
-})
+app.listen(port);
+
